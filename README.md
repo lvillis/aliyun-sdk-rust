@@ -5,10 +5,10 @@
 <p align=center>📦 Aliyun API SDK written in Rust</p>
 
 <div align=center>
-  <a href="https://crates.io/crates/aliyun-sdk">
-    <img src="https://img.shields.io/crates/v/aliyun-sdk.svg" alt="crates.io version">
+  <a href="https://crates.io/crates/alibabacloud">
+    <img src="https://img.shields.io/crates/v/alibabacloud.svg" alt="crates.io version">
   </a>
-  <a href="https://crates.io/crates/aliyun-sdk">
+  <a href="https://crates.io/crates/alibabacloud">
     <img src="https://img.shields.io/github/repo-size/lvillis/aliyun-sdk-rust?style=flat-square&color=328657" alt="crates.io version">
   </a>
   <a href="https://github.com/lvillis/aliyun-sdk-rust/actions">

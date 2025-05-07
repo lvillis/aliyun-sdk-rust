@@ -19,7 +19,7 @@ exclude = [
 ]
 
 [dependencies]
-tokio = { version = "1.44.2", default-features = false, features = ["rt", "macros"] }
+tokio = { version = "1.45.0", default-features = false, features = ["rt", "macros"] }
 reqwest = { version = "0.12.15", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140" }

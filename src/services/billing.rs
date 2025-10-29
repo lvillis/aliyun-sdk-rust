@@ -47,20 +47,24 @@ pub async fn query_account_balance(
 mod tests {
     use super::*;
     use crate::client::AliyunClient;
+    use crate::test_utils::TEST_SECRETS;
     use tokio;
 
     #[tokio::test]
     async fn test_query_account_balance() {
-        // Replace with your actual credentials
+        // Use the centralized TEST_SECRETS to build the client
+        let secrets = &*TEST_SECRETS;
         let client = AliyunClient::new(
-            "access_key_id".into(),
-            "access_key_secret".into(),
+            secrets.access_key_id.clone(),
+            secrets.access_key_secret.clone(),
         );
+
         let result = query_account_balance(&client).await;
         match &result {
             Ok(json) => println!("Billing module - Query Account Balance success:\n{}", json),
-            Err(err) => println!("Billing module - Query Account Balance error:\n{}", err),
+            Err(err) => eprintln!("Billing module - Query Account Balance error:\n{}", err),
         }
+
         assert!(
             result.is_ok(),
             "Billing module - QueryAccountBalance API call failed: {:?}",

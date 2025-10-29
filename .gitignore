@@ -1,5 +1,7 @@
 
 .git/
 .idea/
-.cargo/
+.cargo/**/*
 target/
+
+!/.cargo/config.example.toml

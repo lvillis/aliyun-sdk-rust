@@ -24,5 +24,5 @@ impl TestSecrets {
     }
 }
 
-static TEST_SECRETS: Lazy<TestSecrets> =
-    Lazy::new(|| TestSecrets::from_env().expect("Failed to load test secrets from environment."));
+pub static TEST_SECRETS: Lazy<TestSecrets> =
+    Lazy::new(|| TestSecrets::from_env().expect("Failed to load test secrets from environment"));

@@ -12,6 +12,15 @@ pub struct TestSecrets {
 
 impl TestSecrets {
     fn from_env() -> Result<Self, TestSecretsError> {
+        // It is recommended to store test credentials in a `.env` file at the project root
+        // for local development. Environment variables set in `.cargo/config.toml`
+        // will override corresponding values from the `.env` file.
+        //
+        // Note: some IDEs and their debuggers may not load environment variables from
+        // `.cargo/config.toml`, which can lead to different behavior when running or
+        // debugging tests inside the IDE.
+        let _ = dotenv::dotenv();
+
         let access_key_id =
             env::var("TEST_ACCESS_KEY_ID").map_err(TestSecretsError::AccessKeyId)?;
         let access_key_secret =

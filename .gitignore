@@ -3,5 +3,6 @@
 .idea/
 .cargo/**/*
 target/
+.env
 
 !/.cargo/config.example.toml

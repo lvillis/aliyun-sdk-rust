@@ -78,5 +78,8 @@ async fn main() {
     // Query available regions
     let regions = describe_regions(&client, None).await.unwrap();
     println!("Available regions: {:?}", regions);
+    // Get current caller identity
+    let caller_identity = client.sts().get_caller_identity().await.unwrap();
+    println!("Current caller identity: {:?}", caller_identity);
 }
 ```

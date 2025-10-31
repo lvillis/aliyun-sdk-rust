@@ -5,6 +5,8 @@ pub use error::TestSecretsError;
 use once_cell::sync::Lazy;
 use std::env;
 
+use crate::client::AliyunClient;
+
 pub struct TestSecrets {
     pub access_key_id: String,
     pub access_key_secret: String,
@@ -35,3 +37,10 @@ impl TestSecrets {
 
 pub static TEST_SECRETS: Lazy<TestSecrets> =
     Lazy::new(|| TestSecrets::from_env().expect("Failed to load test secrets from environment"));
+
+pub fn create_aliyun_client() -> AliyunClient {
+    AliyunClient::new(
+        TEST_SECRETS.access_key_id.clone(),
+        TEST_SECRETS.access_key_secret.clone(),
+    )
+}

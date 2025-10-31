@@ -5,7 +5,11 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum AdvancedClientError {
     #[error("When using the underlying client to send request it throw an error: {0}")]
-    UnderlyingError(#[source] Box<dyn Error>),
+    UnderlyingError(
+        #[source]
+        #[from]
+        Box<dyn Error>,
+    ),
     #[error("When trying to deserialization the result an error occurred")]
-    ResultDeserializationError(serde_json::Error),
+    ResultDeserializationError(#[from] serde_json::Error),
 }

@@ -15,13 +15,8 @@ impl<'a> STSClient<'a> {
     }
 
     pub async fn get_caller_identity(&self) -> Result<CallerIdentityBody, AdvancedClientError> {
-        let response = get_caller_identity(&self.client)
-            .await
-            .map_err(|e| AdvancedClientError::UnderlyingError(e))?;
-
-        let deserialized = serde_json::from_value::<CallerIdentityBody>(response)
-            .map_err(|e| AdvancedClientError::ResultDeserializationError(e))?;
-
+        let response = get_caller_identity(&self.client).await?;
+        let deserialized = serde_json::from_value::<CallerIdentityBody>(response)?;
         Result::Ok(deserialized)
     }
 }

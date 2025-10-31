@@ -1,3 +1,6 @@
+pub mod sts;
+pub mod error;
+
 use crate::signing;
 use crate::utils;
 use chrono::Utc;

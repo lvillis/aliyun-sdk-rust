@@ -29,6 +29,7 @@ sha1 = "0.10.6"
 base64 = "0.22.1"
 percent-encoding = "2.3.1"
 uuid = { version = "1.16.0", features = ["v4"] }
+thiserror = "2.0.17"
 
 [dev-dependencies]
 dotenv = "0.15.0"

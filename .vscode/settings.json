@@ -4,6 +4,7 @@
         "aliyuncs",
         "dotenv",
         "HMAC",
-        "reqwest"
+        "reqwest",
+        "thiserror"
     ]
 }

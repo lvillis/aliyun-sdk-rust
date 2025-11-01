@@ -511,16 +511,18 @@ mod tests {
     use super::*;
     use crate::client::AliyunClient;
     use tokio;
+    use crate::test_utils::TEST_SECRETS;
 
-    const TEST_ACCESS_KEY_ID: &str = "access_key_id";
-    const TEST_ACCESS_KEY_SECRET: &str = "access_key_secret";
     const TEST_REGION: &str = "cn-hangzhou";
     const TEST_ZONE: &str = "cn-hangzhou-d";
     const TEST_INSTANCE_ID: &str = "YourInstanceId";
 
     #[tokio::test]
     async fn test_describe_regions() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_regions(&client, Some(TEST_REGION)).await;
         println!("describe_regions: {:?}", result);
         assert!(result.is_ok());
@@ -529,7 +531,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_describe_zones() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_zones(&client, TEST_REGION).await;
         println!("describe_zones: {:?}", result);
         assert!(result.is_ok());
@@ -538,7 +543,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_describe_available_resource() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_available_resource(&client, TEST_REGION, TEST_ZONE).await;
         println!("describe_available_resource: {:?}", result);
         assert!(result.is_ok());
@@ -547,7 +555,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_describe_account_attributes() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_account_attributes(&client).await;
         println!("describe_account_attributes: {:?}", result);
         assert!(result.is_ok());
@@ -556,7 +567,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_describe_resources_modification() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_resources_modification(&client, TEST_REGION, TEST_ZONE).await;
         println!("describe_resources_modification: {:?}", result);
         assert!(result.is_ok());
@@ -565,7 +579,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_describe_recommend_instance_type() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_recommend_instance_type(&client, TEST_REGION).await;
         println!("describe_recommend_instance_type: {:?}", result);
         assert!(result.is_ok());
@@ -576,7 +593,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_run_instances() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let image_id = "YourImageId";
         let instance_type = "ecs.g5.large";
         let result = run_instances(&client, TEST_REGION, image_id, instance_type).await;
@@ -587,7 +607,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_start_instances() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let instance_ids = vec![TEST_INSTANCE_ID];
         let result = start_instances(&client, instance_ids).await;
         println!("start_instances: {:?}", result);
@@ -597,7 +620,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_stop_instances() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let instance_ids = vec![TEST_INSTANCE_ID];
         let result = stop_instances(&client, instance_ids, Some(false), Some(true)).await;
         println!("stop_instances: {:?}", result);
@@ -607,7 +633,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_reboot_instance() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = reboot_instance(&client, TEST_INSTANCE_ID, Some(false), Some(false)).await;
         println!("reboot_instance: {:?}", result);
         // assert!(result.is_ok());
@@ -616,7 +645,10 @@ mod tests {
     #[tokio::test]
     #[ignore]
     async fn test_delete_instance() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = delete_instance(&client, TEST_INSTANCE_ID).await;
         println!("delete_instance: {:?}", result);
         // assert!(result.is_ok());
@@ -624,7 +656,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_describe_instance_status() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_instance_status(&client, TEST_REGION, None, Some(1), Some(10)).await;
         println!("describe_instance_status: {:?}", result);
         assert!(result.is_ok());
@@ -632,7 +667,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_describe_instances() {
-        let client = AliyunClient::new(TEST_ACCESS_KEY_ID.into(), TEST_ACCESS_KEY_SECRET.into());
+        let client = AliyunClient::new(
+            TEST_SECRETS.access_key_id.clone(),
+            TEST_SECRETS.access_key_secret.clone(),
+        );
         let result = describe_instances(&client, TEST_REGION, None, Some(1), Some(10)).await;
         println!("describe_instances: {:?}", result);
         assert!(result.is_ok());

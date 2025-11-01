@@ -51,6 +51,11 @@ This project is an Aliyun API SDK written in Rust, designed to help developers i
 
 - **Billing Module**
     - [x] QueryAccountBalance
+- **STS Module**
+    - [x] GetCallerIdentity
+    - [ ] AssumeRole
+    - [ ] AssumeRoleWithSAML
+    - [ ] AssumeRoleWithOIDC 
 
 ## Usage
 

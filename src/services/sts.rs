@@ -47,11 +47,11 @@ pub async fn get_caller_identity(client: &AliyunClient) -> Result<Value, Box<dyn
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::create_aliyun_client;
+    use crate::test_utils::{create_aliyun_client, EMPTY, GLOBAL_TEST_SECRETS};
 
     #[tokio::test]
     async fn test_get_caller_identity() {
-        let client = create_aliyun_client();
+        let client = create_aliyun_client::<GLOBAL_TEST_SECRETS>();
 
         let result = get_caller_identity(&client).await;
         println!("get_caller_identity: {:?}", result);
@@ -66,5 +66,9 @@ mod tests {
         assert!(response.get("Arn").is_some());
         // Returned only when the current caller is a RAM role.
         // assert!(response.get("RoleId").is_some());
+
+        let empty_credentials_client = create_aliyun_client::<EMPTY>();
+        let result = get_caller_identity(&empty_credentials_client).await;
+        println!("get_caller_identity (empty credentials): {:?}", result);
     }
 }

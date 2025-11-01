@@ -1,7 +1,10 @@
 pub mod caller_identity;
 
 use crate::{
-    client::{error::AdvancedClientError, sts::caller_identity::CallerIdentityBody, AliyunClient},
+    client::{
+        error::AdvancedClientError, sts::caller_identity::CallerIdentityBody,
+        utils::parse_json_value, AliyunClient,
+    },
     services::sts::get_caller_identity,
 };
 
@@ -28,8 +31,8 @@ impl<'a> STSClient<'a> {
     /// `AdvancedClientError`.
     pub async fn get_caller_identity(&self) -> Result<CallerIdentityBody, AdvancedClientError> {
         let response = get_caller_identity(&self.client).await?;
-        let deserialized = serde_json::from_value::<CallerIdentityBody>(response)?;
-        Result::Ok(deserialized)
+        let parsed = parse_json_value::<CallerIdentityBody>(response)?;
+        Result::Ok(parsed)
     }
 }
 
@@ -46,18 +49,36 @@ impl AliyunClient {
 
 #[cfg(test)]
 mod tests {
-    use crate::test_utils::create_aliyun_client;
+    use claims::assert_matches;
+
+    use crate::{
+        client::error::AdvancedClientError,
+        test_multiple_clients,
+        test_utils::{create_aliyun_client, EMPTY, GLOBAL_TEST_SECRETS, INVALID},
+    };
 
     #[tokio::test]
     async fn test_sts_chain_calling() {
         // Use method chaining to simplify calls to the STS service.
         // The `sts()` method returns a lightweight wrapper that holds a reference to
         // the parent `AliyunClient`, avoiding clones and introducing minimal overhead.
-        let result_body = create_aliyun_client()
+        let result_body = create_aliyun_client::<GLOBAL_TEST_SECRETS>()
             .sts()
             .get_caller_identity()
             .await
             .unwrap();
         println!("{:?}", result_body);
+    }
+
+    #[tokio::test]
+    async fn test_get_caller_identity() {
+        test_multiple_clients! {
+            [EMPTY => "EMPTY", INVALID => "INVALID"],
+            |client, name| async {
+                let result = client.sts().get_caller_identity().await;
+                println!("{} Result: {:#?}", name, result);
+                assert_matches!(result, Err(AdvancedClientError::AliyunRejectError(_)));
+            }
+        }
     }
 }

@@ -1,8 +1,8 @@
 pub mod sts;
 pub mod error;
+pub(crate) mod utils;
 
 use crate::signing;
-use crate::utils;
 use chrono::Utc;
 use reqwest;
 use serde_json::Value;
@@ -66,8 +66,8 @@ impl AliyunClient {
             .map(|(k, v)| {
                 format!(
                     "{}={}",
-                    utils::aliyun_percent_encode(k),
-                    utils::aliyun_percent_encode(v)
+                    crate::utils::aliyun_percent_encode(k),
+                    crate::utils::aliyun_percent_encode(v)
                 )
             })
             .collect::<Vec<String>>()

@@ -5,15 +5,27 @@ use crate::{
     services::sts::get_caller_identity,
 };
 
+/// A thin, non-owning client for STS (Security Token Service) operations.
+///
+/// `STSClient` holds a borrowed reference to an `AliyunClient` and exposes
+/// STS-specific API methods. Because it borrows the parent client it does not
+/// clone or take ownership of the underlying client, keeping calls lightweight
+/// and suitable for method chaining.
 pub struct STSClient<'a> {
     pub client: &'a AliyunClient,
 }
 
 impl<'a> STSClient<'a> {
+    /// Create a new `STSClient` that borrows the provided `AliyunClient`.
     pub fn new(client: &'a AliyunClient) -> Self {
         Self { client }
     }
 
+    /// Call the STS `GetCallerIdentity` operation and return the deserialized
+    /// `CallerIdentityBody` on success.
+    ///
+    /// Errors from the HTTP client or JSON deserialization are propagated as
+    /// `AdvancedClientError`.
     pub async fn get_caller_identity(&self) -> Result<CallerIdentityBody, AdvancedClientError> {
         let response = get_caller_identity(&self.client).await?;
         let deserialized = serde_json::from_value::<CallerIdentityBody>(response)?;
@@ -22,6 +34,11 @@ impl<'a> STSClient<'a> {
 }
 
 impl AliyunClient {
+    /// Obtain an `STSClient` that borrows this `AliyunClient`.
+    ///
+    /// This convenience method enables ergonomic method chaining like
+    /// `client.sts().get_caller_identity().await` without taking ownership of
+    /// the parent client.
     pub fn sts<'a>(&'a self) -> STSClient<'a> {
         STSClient { client: self }
     }
@@ -32,18 +49,15 @@ mod tests {
     use crate::test_utils::create_aliyun_client;
 
     #[tokio::test]
-    async fn test_get_caller_identity() {
-        let client = create_aliyun_client();
-        let sts_client = client.sts();
-        let result_body = sts_client.get_caller_identity().await.unwrap();
-        println!("{:?}", result_body);
-
-        // use chain calling
-        let result_body = client
+    async fn test_sts_chain_calling() {
+        // Use method chaining to simplify calls to the STS service.
+        // The `sts()` method returns a lightweight wrapper that holds a reference to
+        // the parent `AliyunClient`, avoiding clones and introducing minimal overhead.
+        let result_body = create_aliyun_client()
             .sts()
             .get_caller_identity()
             .await
-            .expect("Chain calling failed");
+            .unwrap();
         println!("{:?}", result_body);
     }
 }

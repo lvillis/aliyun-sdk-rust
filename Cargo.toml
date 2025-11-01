@@ -19,8 +19,14 @@ exclude = [
 ]
 
 [dependencies]
-tokio = { version = "1.45.0", default-features = false, features = ["rt", "macros"] }
-reqwest = { version = "0.12.15", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1.45.0", default-features = false, features = [
+    "rt",
+    "macros",
+] }
+reqwest = { version = "0.12.15", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = { version = "1.0.140" }
 chrono = "0.4.42"
@@ -40,4 +46,11 @@ tag-prefix = ""
 tag-name = "{{prefix}}{{version}}"
 pre-release-commit-message = "chore: release {{crate_name}} version {{version}}"
 tag-message = "chore: release {{crate_name}} version {{version}}"
-pre-release-hook = ["git", "cliff", "-o", "CHANGELOG.md", "--tag", "{{version}}" ]
+pre-release-hook = [
+    "git",
+    "cliff",
+    "-o",
+    "CHANGELOG.md",
+    "--tag",
+    "{{version}}",
+]

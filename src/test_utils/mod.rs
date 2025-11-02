@@ -23,10 +23,14 @@ impl TestSecrets {
         // debugging tests inside the IDE.
         let _ = dotenv::dotenv();
 
-        let access_key_id =
-            env::var("TEST_ACCESS_KEY_ID").map_err(TestSecretsError::AccessKeyId)?;
-        let access_key_secret =
-            env::var("TEST_ACCESS_KEY_SECRET").map_err(TestSecretsError::AccessKeySecret)?;
+        let access_key_id = env::var("TEST_ACCESS_KEY_ID").map_err(|e| TestSecretsError {
+            var_name: "TEST_ACCESS_KEY_ID".to_string(),
+            source: e,
+        })?;
+        let access_key_secret = env::var("TEST_ACCESS_KEY_SECRET").map_err(|e| TestSecretsError {
+            var_name: "TEST_ACCESS_KEY_SECRET".to_string(),
+            source: e,
+        })?;
 
         Ok(TestSecrets {
             access_key_id,

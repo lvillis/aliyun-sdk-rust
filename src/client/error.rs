@@ -1,13 +1,13 @@
 use std::error::Error;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 fn default_aliyun_rejection_field() -> String {
     "No content. If you see this please submit a bug issue (to the rust sdk repo).".to_string()
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct AliyunRejection {
     pub code: String,

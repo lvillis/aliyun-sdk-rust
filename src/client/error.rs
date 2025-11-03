@@ -7,6 +7,10 @@ fn default_aliyun_rejection_field() -> String {
     "No content. If you see this please submit a bug issue (to the rust sdk repo).".to_string()
 }
 
+/// Represents an error response returned by the Aliyun server.
+///
+/// The response fields use PascalCase naming convention to match
+/// the format returned by the Aliyun API and maintain consistency.
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub struct AliyunRejection {

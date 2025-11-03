@@ -2,8 +2,10 @@
     "cSpell.words": [
         "Aliyun",
         "aliyuncs",
+        "chrono",
         "dotenv",
         "HMAC",
-        "reqwest"
+        "reqwest",
+        "thiserror"
     ]
 }

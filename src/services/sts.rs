@@ -8,6 +8,7 @@ use std::{collections::BTreeMap, error::Error};
 /// - Request Domain: sts.aliyuncs.com
 /// - API Version: 2015-04-01
 /// - Description: This API returns information about the caller's identity.
+/// - Aliyun Document Link: https://help.aliyun.com/zh/ram/developer-reference/api-sts-2015-04-01-getcalleridentity
 ///
 /// **Input Parameters:**
 ///
@@ -27,7 +28,7 @@ use std::{collections::BTreeMap, error::Error};
 ///
 /// | Field       | Type   | Description                                                      |
 /// |-------------|--------|------------------------------------------------------------------|
-/// | IdentityType| String | Type of identity (e.g., "User", "Role")                          |
+/// | IdentityType| String | Type of identity ("Account", "RAMUser", "AssumedRoleUser")                          |
 /// | RequestId   | String | Unique request ID                                                |
 /// | AccountId   | String | Alibaba Cloud account ID                                         |
 /// | PrincipalId | String | Principal identifier                                             |
@@ -46,16 +47,11 @@ pub async fn get_caller_identity(client: &AliyunClient) -> Result<Value, Box<dyn
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::client::AliyunClient;
-    use crate::test_utils::TEST_SECRETS;
-    use tokio;
+    use crate::test_utils::{create_aliyun_client, EMPTY, GLOBAL_TEST_SECRETS};
 
     #[tokio::test]
     async fn test_get_caller_identity() {
-        let client = AliyunClient::new(
-            TEST_SECRETS.access_key_id.clone(),
-            TEST_SECRETS.access_key_secret.clone(),
-        );
+        let client = create_aliyun_client::<GLOBAL_TEST_SECRETS>();
 
         let result = get_caller_identity(&client).await;
         println!("get_caller_identity: {:?}", result);
@@ -70,5 +66,9 @@ mod tests {
         assert!(response.get("Arn").is_some());
         // Returned only when the current caller is a RAM role.
         // assert!(response.get("RoleId").is_some());
+
+        let empty_credentials_client = create_aliyun_client::<EMPTY>();
+        let result = get_caller_identity(&empty_credentials_client).await;
+        println!("get_caller_identity (empty credentials): {:?}", result);
     }
 }

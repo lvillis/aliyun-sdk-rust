@@ -1,46 +1,112 @@
 [package]
 name = "alibabacloud"
-description = "📦 Aliyun API SDK written in Rust"
+description = "📦 Alibaba Cloud (Aliyun) API SDK for Rust"
 version = "0.1.1"
-edition = "2021"
+edition = "2024"
+rust-version = "1.92.0"
 license = "MIT"
 authors = ["lvillis<lvillis@outlook.com>"]
 repository = "https://github.com/lvillis/aliyun-sdk-rust"
 homepage = "https://github.com/lvillis/aliyun-sdk-rust"
-documentation = "https://github.com/lvillis/aliyun-sdk-rust/blob/main/README.md"
-exclude = [
-    "/docs/",
-    "/tests/",
-    "/.config/",
-    "/.github/",
-    "/.justfile",
-    "/rust-toolchain.toml",
-    "/.gitignore",
+documentation = "https://docs.rs/alibabacloud"
+include = [
+  "Cargo.toml",
+  "README.md",
+  "LICENSE",
+  "CHANGELOG.md",
+  "src/**",
+  "examples/**",
+  "tests/**"
 ]
 
+[workspace]
+members = ["."]
+resolver = "3"
+
+[workspace.dependencies]
+base64 = { version = "0.22.1", default-features = false, features = ["std"] }
+fastrand = { version = "2.3.0", default-features = false, features = ["std"] }
+hmac = { version = "0.12.1", default-features = false, features = ["std"] }
+http = { version = "1.4.0", default-features = false, features = ["std"] }
+http-body-util = { version = "0.1.3", default-features = false }
+httpdate = { version = "1.0.3", default-features = false }
+hyper = { version = "1.8.1", default-features = false, features = ["client", "http1"] }
+hyper-rustls = { version = "0.27.7", default-features = false, features = ["http1", "ring", "rustls-platform-verifier", "tls12"] }
+hyper-util = { version = "0.1.19", default-features = false, features = ["client-legacy", "http1", "tokio"] }
+percent-encoding = { version = "2.3.2", default-features = false, features = ["std"] }
+reqwest = { version = "0.13.1", default-features = false, features = ["json"] }
+rustls = { version = "0.23.36", default-features = false, features = ["ring", "std", "tls12"] }
+serde = { version = "1.0.228", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1.0.149", default-features = false, features = ["std"] }
+serde_path_to_error = { version = "0.1.20", default-features = false }
+sha1 = { version = "0.10.6", default-features = false, features = ["std"] }
+thiserror = { version = "2.0.17", default-features = false, features = ["std"] }
+time = { version = "0.3.45", default-features = false, features = ["formatting"] }
+tokio = { version = "1.49.0", default-features = false, features = ["macros", "rt", "time"] }
+tracing = { version = "0.1.44", default-features = false, features = ["std"] }
+ureq = { version = "3.1.4", default-features = false }
+url = { version = "2.5.8", default-features = false, features = ["std"] }
+uuid = { version = "1.19.0", default-features = false, features = ["std", "v4"] }
+wiremock = { version = "0.6.5", default-features = false }
+
+[features]
+default = ["async", "native-tls"]
+
+# Core modes
+async = [
+  "dep:reqwest",
+  "dep:tokio",
+  "dep:hyper",
+  "dep:hyper-rustls",
+  "dep:hyper-util",
+  "dep:http-body-util",
+]
+blocking = ["dep:ureq"]
+
+# TLS backend selection (mutually exclusive)
+rustls = ["dep:rustls", "ureq?/rustls"]
+native-tls = ["reqwest?/native-tls", "ureq?/native-tls"]
+
+# Observability
+tracing = ["dep:tracing"]
+
+# Escape hatch (not SemVer-stable)
+unstable-raw = []
+
 [dependencies]
-tokio = { version = "1.45.0", default-features = false, features = [
-    "rt",
-    "macros",
-] }
-reqwest = { version = "0.12.15", default-features = false, features = [
-    "json",
-    "rustls-tls",
-] }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = { version = "1.0.140" }
-chrono = "0.4.42"
-hmac = "0.12.1"
-sha1 = "0.10.6"
-base64 = "0.22.1"
-percent-encoding = "2.3.1"
-uuid = { version = "1.18.1", features = ["v4"] }
-thiserror = "2.0.17"
+base64 = { workspace = true }
+fastrand = { workspace = true }
+hmac = { workspace = true }
+http = { workspace = true }
+http-body-util = { workspace = true, optional = true }
+httpdate = { workspace = true }
+hyper = { workspace = true, optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, optional = true }
+percent-encoding = { workspace = true }
+reqwest = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_path_to_error = { workspace = true }
+sha1 = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
+ureq = { workspace = true, optional = true }
+url = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
-claims = "0.8.0"
-dotenv = "0.15.0"
-once_cell = "1.21.3"
+tokio = { workspace = true }
+wiremock = { workspace = true }
+
+[profile.dev]
+debug = 1
+
+[profile.test]
+debug = 1
 
 [package.metadata.release]
 tag-prefix = ""
@@ -48,10 +114,10 @@ tag-name = "{{prefix}}{{version}}"
 pre-release-commit-message = "chore: release {{crate_name}} version {{version}}"
 tag-message = "chore: release {{crate_name}} version {{version}}"
 pre-release-hook = [
-    "git",
-    "cliff",
-    "-o",
-    "CHANGELOG.md",
-    "--tag",
-    "{{version}}",
+  "git",
+  "cliff",
+  "-o",
+  "CHANGELOG.md",
+  "--tag",
+  "{{version}}",
 ]

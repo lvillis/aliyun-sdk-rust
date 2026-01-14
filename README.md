@@ -22,15 +22,14 @@
 
 ---
 
-This project is an Aliyun API SDK written in Rust, designed to help developers integrate Aliyun Cloud services easily. The SDK leverages asynchronous programming (via Tokio) and encapsulates functionalities such as request signing (HMAC-SHA1), unified request handling, and modular service interfaces (e.g., ECS, Billing).
+This project is an Aliyun RPC API SDK written in Rust, with a consistent async/blocking API surface and shared types + error handling.
 
 ## Features
 
-- **Asynchronous Support**: Built on Tokio for high concurrency.
-- **Request Signing**: Implements Aliyun's API signature mechanism using HMAC-SHA1.
-- **Modular Design**: The project is organized into multiple modules (e.g., ECS, Billing) with clear separation of concerns.
-- **Detailed Documentation**: Each interface is documented with detailed input/output parameter tables.
-- **Comprehensive Testing**: Each service interface includes test cases to ensure correct functionality.
+- **Async + Blocking**: `Client` (async) and `BlockingClient` (feature=`blocking`) share the same `types` and `Error`.
+- **TLS Backend Selection**: Choose exactly one of `native-tls` (default) or `rustls`.
+- **Request Signing**: Implements Aliyun's RPC signature mechanism (HMAC-SHA1).
+- **Retry + Diagnostics**: Conservative retries for transient failures; error includes status/request-id/body snippet (redacted by default).
 
 ## Implemented Interfaces
 
@@ -63,23 +62,57 @@ Add this crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-alibabacloud = "0.1.0"
+# Async + native-tls (default)
+alibabacloud = "0.1.1"
+# Required to run the async example below
+tokio = { version = "1", features = ["macros", "rt"] }
+
+# Blocking only (no tokio/reqwest)
+# alibabacloud = { version = "0.1.1", default-features = false, features = ["blocking", "native-tls"] }
+
+# Async + rustls (no native-tls)
+# alibabacloud = { version = "0.1.1", default-features = false, features = ["async", "rustls"] }
 ```
 
-Then import and use the interfaces:
+Then import and use the interfaces.
+
+### Async
 
 ```rust
-use alibabacloud::client::AliyunClient;
-use alibabacloud::services::ecs::*;
+use alibabacloud::{Auth, Client};
 
-#[tokio::main]
-async fn main() {
-    let client = AliyunClient::new("YourAccessKeyId".into(), "YourAccessKeySecret".into());
-    // Query available regions
-    let regions = describe_regions(&client, None).await.unwrap();
-    println!("Available regions: {:?}", regions);
-    // Get current caller identity
-    let caller_identity = client.sts().get_caller_identity().await.unwrap();
-    println!("Current caller identity: {:?}", caller_identity);
+#[tokio::main(flavor = "current_thread")]
+async fn main() -> Result<(), alibabacloud::Error> {
+    let client = Client::builder()
+        .auth(Auth::access_key("ACCESS_KEY_ID", "ACCESS_KEY_SECRET"))
+        .build()?;
+
+    let regions = client.ecs().describe_regions(Default::default()).await?;
+    println!("{regions:#?}");
+
+    let caller_identity = client.sts().get_caller_identity().await?;
+    println!("{caller_identity:#?}");
+
+    Ok(())
+}
+```
+
+### Blocking
+
+```rust
+use alibabacloud::{Auth, BlockingClient};
+
+fn main() -> Result<(), alibabacloud::Error> {
+    let client = BlockingClient::builder()
+        .auth(Auth::access_key("ACCESS_KEY_ID", "ACCESS_KEY_SECRET"))
+        .build()?;
+
+    let regions = client.ecs().describe_regions(Default::default())?;
+    println!("{regions:#?}");
+
+    let caller_identity = client.sts().get_caller_identity()?;
+    println!("{caller_identity:#?}");
+
+    Ok(())
 }
 ```

@@ -4,9 +4,8 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
-      - 'Dockerfile'
-      - 'CHANGELOG.md'
-      - 'README.md'
+      - "CHANGELOG.md"
+      - "README.md"
   pull_request:
     branches: [ main ]
 
@@ -16,15 +15,47 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+
+      - name: Set up Rust (1.92.0)
+        uses: dtolnay/rust-toolchain@1.92.0
         with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          components: rustfmt, clippy
 
-      - name: Build
-        run: cargo build --verbose
+      - name: Format
+        run: cargo fmt --check
 
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Install native-tls system deps
+        run: sudo apt-get update && sudo apt-get install -y pkg-config libssl-dev
+
+      - name: Clippy (default)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Clippy (blocking + rustls)
+        run: cargo clippy --workspace --all-targets --no-default-features --features blocking,rustls -- -D warnings
+
+      - name: Clippy (async + rustls)
+        run: cargo clippy --workspace --all-targets --no-default-features --features async,rustls -- -D warnings
+
+      - name: Check (async + native-tls)
+        run: cargo check --workspace --no-default-features --features async,native-tls
+
+      - name: Check (blocking + native-tls)
+        run: cargo check --workspace --no-default-features --features blocking,native-tls
+
+      - name: Test (default)
+        run: cargo test --workspace
+
+      - name: Test (blocking + rustls)
+        run: cargo test --workspace --no-default-features --features blocking,rustls
+
+      - name: Test (async + rustls)
+        run: cargo test --workspace --no-default-features --features async,rustls
+
+      - name: Test (async + native-tls)
+        run: cargo test --workspace --no-default-features --features async,native-tls
+
+      - name: Test (blocking + native-tls)
+        run: cargo test --workspace --no-default-features --features blocking,native-tls
+
+      - name: Doc
+        run: cargo doc --workspace --no-deps

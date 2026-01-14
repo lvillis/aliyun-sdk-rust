@@ -1,15 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum IdentityType {
     Account,
-    RAMUser,
+    #[serde(rename = "RAMUser")]
+    RamUser,
     AssumedRoleUser,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
-pub struct CallerIdentityBody {
+pub struct CallerIdentity {
     pub identity_type: IdentityType,
     pub request_id: String,
     pub account_id: String,

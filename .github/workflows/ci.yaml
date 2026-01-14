@@ -42,6 +42,18 @@ jobs:
       - name: Check (blocking + native-tls)
         run: cargo check --workspace --no-default-features --features blocking,native-tls
 
+      - name: Check (async + native-tls + tracing)
+        run: cargo check --workspace --no-default-features --features async,native-tls,tracing
+
+      - name: Check (blocking + native-tls + tracing)
+        run: cargo check --workspace --no-default-features --features blocking,native-tls,tracing
+
+      - name: Check (async + rustls + tracing)
+        run: cargo check --workspace --no-default-features --features async,rustls,tracing
+
+      - name: Check (blocking + rustls + tracing)
+        run: cargo check --workspace --no-default-features --features blocking,rustls,tracing
+
       - name: Test (default)
         run: cargo test --workspace
 

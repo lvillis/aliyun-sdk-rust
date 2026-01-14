@@ -1,5 +1,8 @@
 use std::{collections::BTreeMap, sync::Arc, time::Duration};
 
+#[cfg(feature = "tracing")]
+use std::time::Instant;
+
 use http::{HeaderMap, HeaderValue, Method, header};
 use serde::de::DeserializeOwned;
 
@@ -156,6 +159,25 @@ impl Client {
         url: url::Url,
     ) -> Result<T, Error> {
         let path = url.path().to_owned();
+        #[cfg(feature = "tracing")]
+        let start = Instant::now();
+
+        #[cfg(feature = "tracing")]
+        let host = url.host_str().unwrap_or("<unknown>");
+        #[cfg(feature = "tracing")]
+        let span = tracing::info_span!(
+            "alibabacloud.request",
+            method = %method,
+            host = host,
+            path = %path,
+            status = tracing::field::Empty,
+            latency_ms = tracing::field::Empty,
+            retry_count = tracing::field::Empty,
+            request_id = tracing::field::Empty,
+        );
+        #[cfg(feature = "tracing")]
+        let _guard = span.enter();
+
         let headers = self.inner.defaults.default_headers.clone();
 
         let request = Request {
@@ -165,54 +187,100 @@ impl Client {
             timeout: self.inner.defaults.timeout,
         };
 
-        let response = self.send_with_retries(&request).await?;
+        let response = match self.send_with_retries(&request).await {
+            Ok(response) => response,
+            Err(error) => {
+                #[cfg(feature = "tracing")]
+                {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+                    record_span_outcome(error.status(), error.request_id(), latency_ms);
+                    tracing::warn!(error_kind = error_kind(&error), "request failed");
+                }
+                return Err(error);
+            }
+        };
+
         let request_id = extract_request_id(&response.headers);
+        #[cfg(feature = "tracing")]
+        {
+            record_span_outcome(Some(response.status), request_id.as_deref(), 0);
+        }
 
         if !response.status.is_success() {
-            return Err(classify_http_error(
+            let error = classify_http_error(
                 method,
                 path,
                 response,
                 request_id,
                 self.inner.defaults.capture_body_snippet,
                 self.inner.defaults.body_snippet_max_len,
-            ));
+            );
+            #[cfg(feature = "tracing")]
+            {
+                let latency_ms = start.elapsed().as_millis() as u64;
+                record_span_outcome(error.status(), error.request_id(), latency_ms);
+                tracing::warn!(error_kind = error_kind(&error), "request failed");
+            }
+            return Err(error);
         }
 
         let mut deserializer = serde_json::Deserializer::from_slice(&response.body);
         let parsed = serde_path_to_error::deserialize::<_, AliyunEnvelope<T>>(&mut deserializer);
         match parsed {
-            Ok(AliyunEnvelope::Ok(value)) => Ok(value),
+            Ok(AliyunEnvelope::Ok(value)) => {
+                #[cfg(feature = "tracing")]
+                {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+                    record_span_outcome(Some(response.status), request_id.as_deref(), latency_ms);
+                }
+                Ok(value)
+            }
             Ok(AliyunEnvelope::Err(err)) => {
                 let body_snippet = maybe_body_snippet(
                     self.inner.defaults.capture_body_snippet,
                     &response.body,
                     self.inner.defaults.body_snippet_max_len,
                 );
-                Err(classify_aliyun_error(
+                let error = classify_aliyun_error(
                     method,
                     path,
                     response.status,
                     request_id,
                     err,
                     body_snippet,
-                ))
+                );
+                #[cfg(feature = "tracing")]
+                {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+                    record_span_outcome(error.status(), error.request_id(), latency_ms);
+                    tracing::warn!(error_kind = error_kind(&error), "request failed");
+                }
+                Err(error)
             }
-            Err(source) => Err(Error::Decode {
-                info: Box::new(ErrorInfo {
-                    status: Some(response.status),
-                    method: Some(method),
-                    path: Some(path),
-                    request_id,
-                    body_snippet: maybe_body_snippet(
-                        self.inner.defaults.capture_body_snippet,
-                        &response.body,
-                        self.inner.defaults.body_snippet_max_len,
-                    ),
-                    message: None,
-                }),
-                source: Box::new(source),
-            }),
+            Err(source) => {
+                let error = Error::Decode {
+                    info: Box::new(ErrorInfo {
+                        status: Some(response.status),
+                        method: Some(method),
+                        path: Some(path),
+                        request_id,
+                        body_snippet: maybe_body_snippet(
+                            self.inner.defaults.capture_body_snippet,
+                            &response.body,
+                            self.inner.defaults.body_snippet_max_len,
+                        ),
+                        message: None,
+                    }),
+                    source: Box::new(source),
+                };
+                #[cfg(feature = "tracing")]
+                {
+                    let latency_ms = start.elapsed().as_millis() as u64;
+                    record_span_outcome(error.status(), error.request_id(), latency_ms);
+                    tracing::warn!(error_kind = error_kind(&error), "request failed");
+                }
+                Err(error)
+            }
         }
     }
 
@@ -225,11 +293,20 @@ impl Client {
                     if attempt >= self.inner.retry.max_retries
                         || !should_retry_status(response.status)
                     {
+                        #[cfg(feature = "tracing")]
+                        tracing::Span::current().record("retry_count", attempt as u64);
                         return Ok(response);
                     }
 
                     let delay = parse_retry_after(&response.headers)
                         .unwrap_or_else(|| backoff_delay(&self.inner.retry, attempt));
+                    #[cfg(feature = "tracing")]
+                    tracing::debug!(
+                        retry_count = attempt + 1,
+                        delay_ms = delay.as_millis() as u64,
+                        status = response.status.as_u16(),
+                        "retrying request"
+                    );
                     tokio::time::sleep(delay).await;
                     attempt += 1;
                     continue;
@@ -239,11 +316,19 @@ impl Client {
                         && is_retryable_transport_error(&*source)
                     {
                         let delay = backoff_delay(&self.inner.retry, attempt);
+                        #[cfg(feature = "tracing")]
+                        tracing::debug!(
+                            retry_count = attempt + 1,
+                            delay_ms = delay.as_millis() as u64,
+                            "retrying after transport error"
+                        );
                         tokio::time::sleep(delay).await;
                         attempt += 1;
                         continue;
                     }
 
+                    #[cfg(feature = "tracing")]
+                    tracing::Span::current().record("retry_count", attempt as u64);
                     return Err(Error::Transport {
                         info: Box::new(ErrorInfo {
                             status: None,
@@ -258,6 +343,38 @@ impl Client {
                 }
             }
         }
+    }
+}
+
+#[cfg(feature = "tracing")]
+fn record_span_outcome(
+    status: Option<http::StatusCode>,
+    request_id: Option<&str>,
+    latency_ms: u64,
+) {
+    let span = tracing::Span::current();
+    if let Some(status) = status {
+        span.record("status", status.as_u16());
+    }
+    if let Some(request_id) = request_id {
+        span.record("request_id", request_id);
+    }
+    if latency_ms > 0 {
+        span.record("latency_ms", latency_ms);
+    }
+}
+
+#[cfg(feature = "tracing")]
+fn error_kind(error: &Error) -> &'static str {
+    match error {
+        Error::InvalidConfig { .. } => "invalid_config",
+        Error::Auth { .. } => "auth",
+        Error::NotFound { .. } => "not_found",
+        Error::Conflict { .. } => "conflict",
+        Error::RateLimited { .. } => "rate_limited",
+        Error::Api { .. } => "api",
+        Error::Transport { .. } => "transport",
+        Error::Decode { .. } => "decode",
     }
 }
 

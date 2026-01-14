@@ -28,6 +28,7 @@ This project is an Aliyun RPC API SDK written in Rust, with a consistent async/b
 
 - **Async + Blocking**: `Client` (async) and `BlockingClient` (feature=`blocking`) share the same `types` and `Error`.
 - **TLS Backend Selection**: Choose exactly one of `native-tls` (default) or `rustls`.
+- **Tracing**: Enable feature=`tracing` to emit per-request spans (method/host/path/status/latency/retry_count/request_id), without logging sensitive query strings.
 - **Request Signing**: Implements Aliyun's RPC signature mechanism (HMAC-SHA1).
 - **Retry + Diagnostics**: Conservative retries for transient failures; error includes status/request-id/body snippet (redacted by default).
 
